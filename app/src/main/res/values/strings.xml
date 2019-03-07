@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RecycleNewsTask</string>
+    <string name="relatedNews">Последние</string>
+    <string name="chosenNews">Избранное</string>
+</resources>
