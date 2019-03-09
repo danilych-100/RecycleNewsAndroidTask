@@ -7,9 +7,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.recyclenewstask.R;
+import com.example.recyclenewstask.RecycleNewsAdapter;
+import com.example.recyclenewstask.utils.NewsUtils;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class NewsFragment extends Fragment {
 
@@ -35,8 +39,14 @@ public class NewsFragment extends Fragment {
     @Override public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                                        Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.news_page, container, false);
-        TextView textView = (TextView) view;
-        textView.setText("Fragment #" + mPage);
+
+        RecyclerView.LayoutManager viewManager = new LinearLayoutManager(view.getContext());
+        RecyclerView.Adapter newsAdapter = new RecycleNewsAdapter(NewsUtils.generateNews(10));
+
+        RecyclerView recyclerView = view.findViewById(R.id.newsRecycleView);
+        recyclerView.setLayoutManager(viewManager);
+        recyclerView.setAdapter(newsAdapter);
+
         return view;
     }
 }

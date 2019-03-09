@@ -23,13 +23,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         createTabLayout();
-
-        RecyclerView.LayoutManager viewManager = new LinearLayoutManager(this);
-        RecyclerView.Adapter newsAdapter = new RecycleNewsAdapter(generateNews(10));
-
-        RecyclerView recyclerView = findViewById(R.id.newsRecycleView);
-        recyclerView.setLayoutManager(viewManager);
-        recyclerView.setAdapter(newsAdapter);
     }
 
     private void createTabLayout() {
@@ -39,19 +32,5 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = findViewById(R.id.sliding_tabs);
         tabLayout.setupWithViewPager(viewPager);
-    }
-
-
-    private List<NewsModel> generateNews(final int count){
-        List<NewsModel> news = new ArrayList<>();
-        for(int i = 0 ; i < count ; i++){
-            NewsModel newsModel = new NewsModel();
-            newsModel.title = "News " + i + 1;
-            newsModel.desc = "Lorem Ipsum";
-            newsModel.date = new Date().toString();
-            news.add(newsModel);
-        }
-
-        return news;
     }
 }

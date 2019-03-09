@@ -10,7 +10,7 @@ import androidx.fragment.app.FragmentPagerAdapter;
 
 public class NewsFragmentPagerAdapter extends FragmentPagerAdapter {
 
-    final int PAGE_COUNT = 3;
+    final int PAGE_COUNT = 2;
 
     private final String tabTitles[];
 
@@ -31,7 +31,6 @@ public class NewsFragmentPagerAdapter extends FragmentPagerAdapter {
     }
 
     @Override public CharSequence getPageTitle(int position) {
-
         return tabTitles[position];
     }
 }
