@@ -27,7 +27,13 @@ public class NewsFragmentPagerAdapter extends FragmentPagerAdapter {
     }
 
     @Override public Fragment getItem(int position) {
-        return NewsFragment.newInstance(position + 1);
+        switch (position){
+            case 0:
+                return NewsFragment.newInstance(NewsStatus.RELATED);
+            case 1:
+                return NewsFragment.newInstance(NewsStatus.CHOSEN);
+        }
+        return NewsFragment.newInstance(NewsStatus.RELATED);
     }
 
     @Override public CharSequence getPageTitle(int position) {

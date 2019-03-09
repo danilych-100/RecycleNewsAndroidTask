@@ -1,7 +1,11 @@
 package com.example.recyclenewstask;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
+
+import com.example.recyclenewstask.listeners.NewsClickListener;
+import com.example.recyclenewstask.model.NewsModel;
 
 import java.util.List;
 
@@ -12,14 +16,30 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<NewsViewHolder> {
 
     private List<NewsModel> news;
 
-    public RecycleNewsAdapter(List<NewsModel> data) {
+    private NewsClickListener listener;
+
+    public RecycleNewsAdapter(List<NewsModel> data, NewsClickListener listener) {
         this.news = data;
+        this.listener = listener;
     }
 
     @NonNull
     @Override
     public NewsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new NewsViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.news_info, parent, false));
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.news_info, parent, false);
+        final NewsViewHolder viewHolder = new NewsViewHolder(view);
+
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos = viewHolder.getAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION) {
+                    listener.onNewsClick(news.get(pos));
+                }
+            }
+        });
+
+        return viewHolder;
     }
 
     @Override

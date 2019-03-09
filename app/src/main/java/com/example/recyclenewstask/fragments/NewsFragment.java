@@ -1,51 +1,74 @@
 package com.example.recyclenewstask.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.recyclenewstask.NewsInformationActivity;
 import com.example.recyclenewstask.R;
 import com.example.recyclenewstask.RecycleNewsAdapter;
+import com.example.recyclenewstask.listeners.NewsClickListener;
+import com.example.recyclenewstask.model.NewsModel;
 import com.example.recyclenewstask.utils.NewsUtils;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class NewsFragment extends Fragment {
 
-    public static final String ARG_PAGE = "ARG_PAGE";
+    private static final String NEWS_ID = "NewsId";
+    private static final String NEWS_STATUS_ARG = "NewsStatusArg";
 
-    private int mPage;
+    private NewsStatus newsStatus;
 
-    public static NewsFragment newInstance(int page) {
+    public static NewsFragment newInstance(NewsStatus status) {
         Bundle args = new Bundle();
-        args.putInt(ARG_PAGE, page);
+        args.putSerializable(NEWS_STATUS_ARG, status);
         NewsFragment fragment = new NewsFragment();
         fragment.setArguments(args);
         return fragment;
     }
 
-    @Override public void onCreate(Bundle savedInstanceState) {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mPage = getArguments().getInt(ARG_PAGE);
+
+        Bundle args = getArguments();
+        if (args != null){
+            newsStatus = (NewsStatus) args.get(NEWS_STATUS_ARG);
         }
     }
 
-    @Override public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                                       Bundle savedInstanceState) {
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.news_page, container, false);
 
-        RecyclerView.LayoutManager viewManager = new LinearLayoutManager(view.getContext());
-        RecyclerView.Adapter newsAdapter = new RecycleNewsAdapter(NewsUtils.generateNews(10));
+        LinearLayoutManager viewManager = new LinearLayoutManager(view.getContext());
+        RecyclerView.Adapter newsAdapter = new RecycleNewsAdapter(
+                NewsUtils.generateNews(10),
+                new NewsClickListener() {
+                    @Override
+                    public void onNewsClick(NewsModel news) {
+                        Intent intent = new Intent(getActivity(), NewsInformationActivity.class);
+                        intent.putExtra(NEWS_ID, news.id);
+                        startActivity(intent);
+                    }
+                });
 
         RecyclerView recyclerView = view.findViewById(R.id.newsRecycleView);
         recyclerView.setLayoutManager(viewManager);
         recyclerView.setAdapter(newsAdapter);
+        recyclerView.addItemDecoration(new DividerItemDecoration(
+                recyclerView.getContext(),
+                viewManager.getOrientation())
+        );
 
         return view;
     }
