@@ -55,4 +55,9 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<NewsViewHolder> {
     public int getItemCount() {
         return this.news.size();
     }
+
+    public void addNews(NewsModel newsModel){
+        this.news.add(newsModel);
+        this.notifyItemInserted(getItemCount() - 1);
+    }
 }

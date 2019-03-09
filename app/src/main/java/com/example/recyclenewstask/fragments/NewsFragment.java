@@ -50,9 +50,23 @@ public class NewsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.news_page, container, false);
 
+        switch (newsStatus){
+            case RELATED:
+                createRecycleViewForNews(view, 10);
+                break;
+            case CHOSEN:
+                createRecycleViewForNews(view, 1);
+                break;
+        }
+
+
+        return view;
+    }
+
+    private void createRecycleViewForNews(final View view, final int newsCount){
         LinearLayoutManager viewManager = new LinearLayoutManager(view.getContext());
         RecyclerView.Adapter newsAdapter = new RecycleNewsAdapter(
-                NewsUtils.generateNews(10),
+                NewsUtils.generateNews(newsCount),
                 new NewsClickListener() {
                     @Override
                     public void onNewsClick(NewsModel news) {
@@ -69,7 +83,5 @@ public class NewsFragment extends Fragment {
                 recyclerView.getContext(),
                 viewManager.getOrientation())
         );
-
-        return view;
     }
 }
