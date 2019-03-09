@@ -2,9 +2,13 @@ package com.example.recyclenewstask;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 public class NewsInformationActivity extends AppCompatActivity {
 
@@ -17,7 +21,6 @@ public class NewsInformationActivity extends AppCompatActivity {
         if(actionBar != null){
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
-
     }
 
     @Override
@@ -31,4 +34,15 @@ public class NewsInformationActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void onToggleStar(View view) {
+        if (view.isActivated()){
+            ((ImageButton)view).setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),android.R.drawable.btn_star_big_off));
+        }else{
+            Toast toast = Toast.makeText(this, "Новость добавлена в избранное", Toast.LENGTH_LONG);
+            toast.show();
+            ((ImageButton)view).setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),android.R.drawable.btn_star_big_on));
+        }
+
+        view.setActivated(!view.isActivated());
+    }
 }
