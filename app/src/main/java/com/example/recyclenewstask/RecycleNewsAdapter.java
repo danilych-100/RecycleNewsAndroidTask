@@ -60,4 +60,20 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<NewsViewHolder> {
         this.news.add(newsModel);
         this.notifyItemInserted(getItemCount() - 1);
     }
+
+    public void removeNewsById(int newsId){
+        int removeNewsId = -1;
+        for(int i = 0; i < this.news.size(); i++){
+            if(this.news.get(i).id == newsId){
+                removeNewsId = i;
+                break;
+            }
+        }
+
+        if(removeNewsId != -1){
+            this.news.remove(removeNewsId);
+            this.notifyItemRemoved(removeNewsId);
+        }
+
+    }
 }
