@@ -1,7 +1,9 @@
-package com.example.recyclenewstask;
+package com.example.recyclenewstask.holder;
 
 import android.view.View;
 import android.widget.TextView;
+
+import com.example.recyclenewstask.R;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;

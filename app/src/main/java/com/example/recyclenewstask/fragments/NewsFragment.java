@@ -9,12 +9,16 @@ import android.view.ViewGroup;
 
 import com.example.recyclenewstask.NewsInformationActivity;
 import com.example.recyclenewstask.R;
-import com.example.recyclenewstask.RecycleNewsAdapter;
+import com.example.recyclenewstask.adapter.RecycleNewsAdapter;
 import com.example.recyclenewstask.listeners.INewsDataPassListener;
 import com.example.recyclenewstask.listeners.NewsClickListener;
+import com.example.recyclenewstask.model.NewsHeaderModel;
 import com.example.recyclenewstask.model.NewsModel;
 import com.example.recyclenewstask.repository.NewsRepository;
+import com.example.recyclenewstask.utils.NewsUtils;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -74,12 +78,19 @@ public class NewsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.news_page, container, false);
 
+        List<Object> newsObjects = new ArrayList<>();
         switch (newsStatus){
             case RELATED:
-                createRecycleViewForNews(view, NewsRepository.getStubNews());
+                newsObjects = NewsUtils.createNewsObjectsForDateGroups(
+                        NewsUtils.groupNewsByDate(NewsRepository.getStubNews())
+                );
+                createRecycleViewForNews(view, newsObjects);
                 break;
             case CHOSEN:
-                chosenNewsAdapter = createRecycleViewForNews(view, NewsRepository.getChosenNews());
+                newsObjects = NewsUtils.createNewsObjectsForDateGroups(
+                        NewsUtils.groupNewsByDate(NewsRepository.getChosenNews())
+                );
+                chosenNewsAdapter = createRecycleViewForNews(view, newsObjects);
                 break;
         }
 
@@ -106,10 +117,10 @@ public class NewsFragment extends Fragment {
         }
     }
 
-    private RecycleNewsAdapter createRecycleViewForNews(final View view, final List<NewsModel> news){
+    private RecycleNewsAdapter createRecycleViewForNews(final View view, final List<Object> newsObjects){
         LinearLayoutManager viewManager = new LinearLayoutManager(view.getContext());
         RecycleNewsAdapter newsAdapter = new RecycleNewsAdapter(
-                news,
+                newsObjects,
                 new NewsClickListener() {
                     @Override
                     public void onNewsClick(NewsModel news) {
