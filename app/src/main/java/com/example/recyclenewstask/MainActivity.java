@@ -1,30 +1,20 @@
 package com.example.recyclenewstask;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentPagerAdapter;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager.widget.ViewPager;
-
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.ViewManager;
 
 import com.example.recyclenewstask.fragments.NewsFragment;
 import com.example.recyclenewstask.fragments.NewsFragmentPagerAdapter;
+import com.example.recyclenewstask.listeners.INewsDataPassListener;
 import com.google.android.material.tabs.TabLayout;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements INewsDataPassListener {
 
-    public static final String NEWS_ID = "NewsId";
-    private final String IS_NEWS_STATUS_CHANGED = "isNewsStatusChanged";
-
-    private NewsFragmentPagerAdapter fragmentPagerAdapter;
+    private static final int CHOSEN_FRAGMENT_NUM = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,23 +24,30 @@ public class MainActivity extends AppCompatActivity {
         createTabLayout();
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(data != null){
-            if(data.getBooleanExtra(IS_NEWS_STATUS_CHANGED, false)){
-                NewsFragment chosenNewsFragment = fragmentPagerAdapter.getItem(1);
-                chosenNewsFragment.onNewsChanged(data.getIntExtra(NEWS_ID, -1));
-            }
-        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void createTabLayout() {
-        fragmentPagerAdapter = new NewsFragmentPagerAdapter(getSupportFragmentManager(), this);
+        NewsFragmentPagerAdapter fragmentPagerAdapter = new NewsFragmentPagerAdapter(getSupportFragmentManager(), this);
         ViewPager viewPager = findViewById(R.id.viewpager);
         viewPager.setAdapter(fragmentPagerAdapter);
 
         TabLayout tabLayout = findViewById(R.id.sliding_tabs);
         tabLayout.setupWithViewPager(viewPager);
+    }
+
+    @Override
+    public void passData(int newsId) {
+        NewsFragment pageFragment = (NewsFragment) getSupportFragmentManager().findFragmentByTag(
+                "android:switcher:" +
+                R.id.viewpager +
+                ":" +
+                CHOSEN_FRAGMENT_NUM
+        );
+        if (pageFragment != null) {
+            pageFragment.onNewsChanged(newsId);
+        }
     }
 }

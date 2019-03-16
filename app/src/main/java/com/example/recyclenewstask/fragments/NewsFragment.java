@@ -1,19 +1,19 @@
 package com.example.recyclenewstask.fragments;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.example.recyclenewstask.NewsInformationActivity;
 import com.example.recyclenewstask.R;
 import com.example.recyclenewstask.RecycleNewsAdapter;
+import com.example.recyclenewstask.listeners.INewsDataPassListener;
 import com.example.recyclenewstask.listeners.NewsClickListener;
 import com.example.recyclenewstask.model.NewsModel;
 import com.example.recyclenewstask.repository.NewsRepository;
-import com.example.recyclenewstask.utils.NewsUtils;
 
 import java.util.List;
 
@@ -23,14 +23,17 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import static com.example.recyclenewstask.MainActivity.NEWS_ID;
-
 public class NewsFragment extends Fragment {
 
+
+    private static final String NEWS_ID = "NewsId";
+    private static final String IS_NEWS_STATUS_CHANGED = "isNewsStatusChanged";
 
     private static final String NEWS_STATUS_ARG = "NewsStatusArg";
 
     private NewsStatus newsStatus;
+
+    private INewsDataPassListener mCallback;
 
     private RecycleNewsAdapter chosenNewsAdapter;
 
@@ -40,6 +43,20 @@ public class NewsFragment extends Fragment {
         NewsFragment fragment = new NewsFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        try
+        {
+            mCallback = (INewsDataPassListener) context;
+        }
+        catch (ClassCastException e)
+        {
+            throw new ClassCastException(context.toString()+ " must implement INewsDataPassListener");
+        }
     }
 
     @Override
@@ -69,13 +86,22 @@ public class NewsFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(data != null){
+            if(data.getBooleanExtra(IS_NEWS_STATUS_CHANGED, false)) {
+                mCallback.passData(data.getIntExtra(NEWS_ID, -1));
+            }
+        }
+    }
+
     public void onNewsChanged(int newsId){
         NewsModel newsModel = NewsRepository.getNewsById(newsId);
-        if(newsModel != null){
+        if(newsModel != null && chosenNewsAdapter != null){
             if(newsModel.isChosen){
-                this.chosenNewsAdapter.addNews(newsModel);
+                chosenNewsAdapter.addNews(newsModel);
             } else {
-                this.chosenNewsAdapter.removeNewsById(newsId);
+                chosenNewsAdapter.removeNewsById(newsId);
             }
         }
     }
