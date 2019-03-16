@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import static com.example.recyclenewstask.utils.NewsUtils.formatDate;
+import static com.example.recyclenewstask.utils.NewsUtils.formatDateStr;
 
 public class RecycleNewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -102,9 +103,42 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         return this.dataset.size();
     }
 
-    public void addNews(NewsModel newsModel){
-        this.dataset.add(newsModel);
-        this.notifyItemInserted(getItemCount() - 1);
+    public void addNews(NewsModel curNews){
+        if(this.dataset.size() == 0){
+            addNewsWithHeader(curNews,0);
+            return;
+        }
+
+        boolean isDateGroupFound = false;
+
+        for(int i = 0; i < this.dataset.size(); i++){
+            Object o = this.dataset.get(i);
+            if(o instanceof NewsModel){
+                NewsModel newsModel = (NewsModel) o;
+                if(!isDateGroupFound){
+                    if(newsModel.date.before(curNews.date)){
+                        addNewsWithHeader(curNews,0);
+                        return;
+                    } else if(formatDate(newsModel.date).equals(formatDate(curNews.date))) {
+                        isDateGroupFound = true;
+                    }
+                } else if(!formatDate(newsModel.date).equals(formatDate(curNews.date))){
+                    this.dataset.add(i, curNews);
+                    this.notifyItemInserted(i);
+                    return;
+                }
+            }
+        }
+
+        this.dataset.add(new NewsHeaderModel(formatDateStr(formatDate(curNews.date), null)));
+        this.dataset.add(curNews);
+        this.notifyItemRangeInserted(getItemCount() - 2, 2);
+    }
+
+    private void addNewsWithHeader(NewsModel curNews, int postitionStart){
+        this.dataset.add(new NewsHeaderModel(formatDateStr(formatDate(curNews.date), null)));
+        this.dataset.add(curNews);
+        this.notifyItemRangeInserted(postitionStart, 2);
     }
 
     public void removeNewsById(int newsId){

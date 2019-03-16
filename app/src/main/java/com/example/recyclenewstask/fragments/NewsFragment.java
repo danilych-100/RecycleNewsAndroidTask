@@ -78,17 +78,19 @@ public class NewsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.news_page, container, false);
 
-        List<Object> newsObjects = new ArrayList<>();
+        List<Object> newsObjects;
         switch (newsStatus){
             case RELATED:
                 newsObjects = NewsUtils.createNewsObjectsForDateGroups(
-                        NewsUtils.groupNewsByDate(NewsRepository.getStubNews())
+                        NewsUtils.groupNewsByDate(NewsRepository.getStubNews()),
+                        getContext()
                 );
                 createRecycleViewForNews(view, newsObjects);
                 break;
             case CHOSEN:
                 newsObjects = NewsUtils.createNewsObjectsForDateGroups(
-                        NewsUtils.groupNewsByDate(NewsRepository.getChosenNews())
+                        NewsUtils.groupNewsByDate(NewsRepository.getChosenNews()),
+                        getContext()
                 );
                 chosenNewsAdapter = createRecycleViewForNews(view, newsObjects);
                 break;

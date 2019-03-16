@@ -1,5 +1,8 @@
 package com.example.recyclenewstask.utils;
 
+import android.content.Context;
+
+import com.example.recyclenewstask.R;
 import com.example.recyclenewstask.model.NewsHeaderModel;
 import com.example.recyclenewstask.model.NewsModel;
 
@@ -58,10 +61,10 @@ public class NewsUtils {
         return map;
     }
 
-    public static List<Object> createNewsObjectsForDateGroups(Map<String, List<NewsModel>> map){
+    public static List<Object> createNewsObjectsForDateGroups(Map<String, List<NewsModel>> map, Context context){
         List<Object> objects = new ArrayList<>();
         for(Map.Entry<String, List<NewsModel>> entry : map.entrySet()){
-            objects.add(new NewsHeaderModel(formatDateStr(entry.getKey())));
+            objects.add(new NewsHeaderModel(formatDateStr(entry.getKey(), context)));
             objects.addAll(entry.getValue());
         }
 
@@ -72,14 +75,20 @@ public class NewsUtils {
         return sdf.format(date);
     }
 
-    private static String formatDateStr(String dateStr){
+    public static String formatDateStr(String dateStr, Context context){
         Date curDate = new Date();
         Date yesterdayDate = new Date(curDate.getTime() - getDayInMillis(1));
 
         if(dateStr.equals(sdf.format(curDate))){
-            return "Сегодня";
+            if(context == null){
+                return "Сегодня";
+            }
+            return context.getString(R.string.newsHeaderToday);
         } else if (dateStr.equals(sdf.format(yesterdayDate))) {
-            return "Вчера";
+            if(context == null){
+                return "Вчера";
+            }
+            return context.getString(R.string.newsHeaderYesterday);
         }
 
         String[] splittedDate = dateStr.split("/");

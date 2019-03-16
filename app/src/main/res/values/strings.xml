@@ -3,4 +3,6 @@
     <string name="relatedNews">Последние</string>
     <string name="chosenNews">Избранное</string>
     <string name="addToChosen">Добавить в избранное</string>
+    <string name="newsHeaderToday">Сегодня</string>
+    <string name="newsHeaderYesterday">Вчера</string>
 </resources>
