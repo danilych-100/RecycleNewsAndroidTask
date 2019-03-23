@@ -41,6 +41,6 @@ public interface ChosenNewsDAO {
     @Query("SELECT news_id FROM chosennews")
     List<Integer> getChosenNewsIds();
 
-    @Query("SELECT count(*) > 0 FROM chosennews WHERE id=:newsId")
+    @Query("SELECT count(*) > 0 FROM chosennews WHERE news_id=:newsId")
     boolean isChosenNewsById(int newsId);
 }

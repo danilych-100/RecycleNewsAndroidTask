@@ -33,7 +33,6 @@ public class NewsMapper {
 
     public static News mapNewsModelToEntity(NewsModel newsModel){
         News news = new News();
-        news.id = newsModel.id;
         news.desc = newsModel.desc;
         news.date = newsModel.date;
         news.fullContent = newsModel.fullContent;

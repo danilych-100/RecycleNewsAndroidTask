@@ -144,9 +144,11 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public void removeNewsById(int newsId){
         int removeNewsId = -1;
         for(int i = 0; i < this.dataset.size(); i++){
-            if(((NewsModel)this.dataset.get(i)).id == newsId){
-                removeNewsId = i;
-                break;
+            if(this.dataset.get(i) instanceof NewsModel){
+                if(((NewsModel)this.dataset.get(i)).id == newsId){
+                    removeNewsId = i;
+                    break;
+                }
             }
         }
 

@@ -34,7 +34,8 @@ public class NewsRepository {
                     NewsDatabase database = Room.databaseBuilder(
                             context,
                             NewsDatabase.class,
-                            "news.db").build();
+                            "news.db").allowMainThreadQueries().build();
+                    database.clearAllTables();
                     newsDAO = database.newsDAO();
                     chosenNewsDAO = database.chosenNewsDAO();
 
