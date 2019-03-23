@@ -12,6 +12,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.recyclenewstask.enitites.ChosenNews;
+import com.example.recyclenewstask.enitites.News;
 import com.example.recyclenewstask.model.NewsModel;
 import com.example.recyclenewstask.repository.NewsRepository;
 
@@ -20,13 +22,18 @@ public class NewsInformationActivity extends AppCompatActivity {
     private static final String NEWS_ID_EXTRA = "NewsId";
     private final String IS_NEWS_STATUS_CHANGED = "isNewsStatusChanged";
 
-    private NewsModel currentNews;
+    private News currentNews;
     private boolean isNewsWasChosenOnCreate;
+    private boolean currentChoice;
+
+    private NewsRepository newsRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_news_information);
+
+        newsRepository = NewsRepository.getInstance(this);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -39,13 +46,14 @@ public class NewsInformationActivity extends AppCompatActivity {
             newsId = bundle.getInt(NEWS_ID_EXTRA);
         }
 
-        currentNews = NewsRepository.getNewsById(newsId);
+        currentNews = newsRepository.getNewsById(newsId);
 
         if (currentNews == null) {
             finish();
         }
 
-        isNewsWasChosenOnCreate = currentNews.isChosen;
+        isNewsWasChosenOnCreate = newsRepository.isChosenNewsById(newsId);
+        currentChoice = isNewsWasChosenOnCreate;
 
         fillNewsPage();
     }
@@ -57,7 +65,7 @@ public class NewsInformationActivity extends AppCompatActivity {
         TextView content = findViewById(R.id.newsMainContent);
         content.setText(currentNews.fullContent);
 
-        if (currentNews.isChosen) {
+        if (currentChoice) {
             ImageButton imageButton = findViewById(R.id.chosenButton);
             imageButton.setActivated(true);
             imageButton.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_on));
@@ -69,12 +77,12 @@ public class NewsInformationActivity extends AppCompatActivity {
             Toast toast = Toast.makeText(this, "Новость удалена из избранного", Toast.LENGTH_LONG);
             toast.show();
             ((ImageButton) view).setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_off));
-            currentNews.isChosen = false;
+            currentChoice = false;
         } else {
             Toast toast = Toast.makeText(this, "Новость добавлена в избранное", Toast.LENGTH_LONG);
             toast.show();
             ((ImageButton) view).setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_on));
-            currentNews.isChosen = true;
+            currentChoice = true;
         }
 
         view.setActivated(!view.isActivated());
@@ -99,13 +107,17 @@ public class NewsInformationActivity extends AppCompatActivity {
     }
 
     private void setNewsResult(){
-        boolean isChangedStatus = isNewsWasChosenOnCreate != currentNews.isChosen;
-        if (isChangedStatus) {
-            NewsRepository.update(currentNews);
+        if(isNewsWasChosenOnCreate && !currentChoice){
+            newsRepository.deleteByNewsId(currentNews.id);
         }
+
+        if(!isNewsWasChosenOnCreate && currentChoice){
+            newsRepository.insertChosenNews(new ChosenNews(currentNews.id));
+        }
+
         Intent intent = new Intent();
         intent.putExtra(NEWS_ID_EXTRA, currentNews.id);
-        intent.putExtra(IS_NEWS_STATUS_CHANGED, isChangedStatus);
+        intent.putExtra(IS_NEWS_STATUS_CHANGED, isNewsWasChosenOnCreate != currentChoice);
         setResult(RESULT_OK, intent);
     }
 }

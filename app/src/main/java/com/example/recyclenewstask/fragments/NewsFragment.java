@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import com.example.recyclenewstask.NewsInformationActivity;
 import com.example.recyclenewstask.R;
 import com.example.recyclenewstask.adapter.RecycleNewsAdapter;
+import com.example.recyclenewstask.enitites.News;
 import com.example.recyclenewstask.listeners.INewsDataPassListener;
 import com.example.recyclenewstask.listeners.NewsClickListener;
 import com.example.recyclenewstask.model.NewsHeaderModel;
@@ -27,8 +28,10 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class NewsFragment extends Fragment {
+import static com.example.recyclenewstask.mapper.NewsMapper.mapNewsEntityToModel;
+import static com.example.recyclenewstask.mapper.NewsMapper.mapNewsListEntityToModel;
 
+public class NewsFragment extends Fragment {
 
     private static final String NEWS_ID = "NewsId";
     private static final String IS_NEWS_STATUS_CHANGED = "isNewsStatusChanged";
@@ -40,6 +43,8 @@ public class NewsFragment extends Fragment {
     private INewsDataPassListener mCallback;
 
     private RecycleNewsAdapter chosenNewsAdapter;
+
+    private NewsRepository newsRepository;
 
     public static NewsFragment newInstance(NewsStatus status) {
         Bundle args = new Bundle();
@@ -67,6 +72,7 @@ public class NewsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        newsRepository = NewsRepository.getInstance(getContext());
         Bundle args = getArguments();
         if (args != null){
             newsStatus = (NewsStatus) args.get(NEWS_STATUS_ARG);
@@ -82,14 +88,20 @@ public class NewsFragment extends Fragment {
         switch (newsStatus){
             case RELATED:
                 newsObjects = NewsUtils.createNewsObjectsForDateGroups(
-                        NewsUtils.groupNewsByDate(NewsRepository.getStubNews()),
+                        NewsUtils.groupNewsByDate(mapNewsListEntityToModel(
+                                newsRepository.getAllNews(),
+                                false)
+                        ),
                         getContext()
                 );
                 createRecycleViewForNews(view, newsObjects);
                 break;
             case CHOSEN:
                 newsObjects = NewsUtils.createNewsObjectsForDateGroups(
-                        NewsUtils.groupNewsByDate(NewsRepository.getChosenNews()),
+                        NewsUtils.groupNewsByDate(mapNewsListEntityToModel(
+                                newsRepository.getAllChosenNewsByIds(),
+                                true)
+                        ),
                         getContext()
                 );
                 chosenNewsAdapter = createRecycleViewForNews(view, newsObjects);
@@ -109,7 +121,8 @@ public class NewsFragment extends Fragment {
     }
 
     public void onNewsChanged(int newsId){
-        NewsModel newsModel = NewsRepository.getNewsById(newsId);
+        News news = newsRepository.getNewsById(newsId);
+        NewsModel newsModel = mapNewsEntityToModel(news, newsRepository.isChosenNewsById(newsId));
         if(newsModel != null && chosenNewsAdapter != null){
             if(newsModel.isChosen){
                 chosenNewsAdapter.addNews(newsModel);
