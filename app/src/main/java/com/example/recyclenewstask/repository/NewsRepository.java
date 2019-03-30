@@ -18,11 +18,11 @@ import androidx.room.Room;
 
 public class NewsRepository {
 
-    private static NewsRepository INSTANCE;
+    private static volatile NewsRepository INSTANCE;
 
-    private static NewsDAO newsDAO;
+    private NewsDAO newsDAO;
 
-    private static ChosenNewsDAO chosenNewsDAO;
+    private ChosenNewsDAO chosenNewsDAO;
 
     private NewsRepository(){}
 
@@ -36,10 +36,10 @@ public class NewsRepository {
                             NewsDatabase.class,
                             "news.db").allowMainThreadQueries().build();
                     database.clearAllTables();
-                    newsDAO = database.newsDAO();
-                    chosenNewsDAO = database.chosenNewsDAO();
+                    INSTANCE.setNewsDAO(database.newsDAO());
+                    INSTANCE.setChosenNewsDAO(database.chosenNewsDAO());
 
-                    newsDAO.insertMany(NewsMapper.mapNewsModelListToEntity(NewsUtils.generateNews(30)));
+                    INSTANCE.getNewsDAO().insertMany(NewsMapper.mapNewsModelListToEntity(NewsUtils.generateNews(30)));
                 }
             }
         }
@@ -84,4 +84,19 @@ public class NewsRepository {
     }
 
 
+    public NewsDAO getNewsDAO() {
+        return newsDAO;
+    }
+
+    public void setNewsDAO(NewsDAO newsDAO) {
+        this.newsDAO = newsDAO;
+    }
+
+    public ChosenNewsDAO getChosenNewsDAO() {
+        return chosenNewsDAO;
+    }
+
+    public void setChosenNewsDAO(ChosenNewsDAO chosenNewsDAO) {
+        this.chosenNewsDAO = chosenNewsDAO;
+    }
 }

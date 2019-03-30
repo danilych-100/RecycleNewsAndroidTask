@@ -16,6 +16,8 @@ public class MainActivity extends AppCompatActivity implements INewsDataPassList
 
     private static final int CHOSEN_FRAGMENT_NUM = 1;
 
+    private NewsFragmentPagerAdapter adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,9 +32,9 @@ public class MainActivity extends AppCompatActivity implements INewsDataPassList
     }
 
     private void createTabLayout() {
-        NewsFragmentPagerAdapter fragmentPagerAdapter = new NewsFragmentPagerAdapter(getSupportFragmentManager(), this);
+        adapter = new NewsFragmentPagerAdapter(getSupportFragmentManager(), this);
         ViewPager viewPager = findViewById(R.id.viewpager);
-        viewPager.setAdapter(fragmentPagerAdapter);
+        viewPager.setAdapter(adapter);
 
         TabLayout tabLayout = findViewById(R.id.sliding_tabs);
         tabLayout.setupWithViewPager(viewPager);
@@ -40,13 +42,8 @@ public class MainActivity extends AppCompatActivity implements INewsDataPassList
 
     @Override
     public void passData(int newsId) {
-        NewsFragment pageFragment = (NewsFragment) getSupportFragmentManager().findFragmentByTag(
-                "android:switcher:" +
-                R.id.viewpager +
-                ":" +
-                CHOSEN_FRAGMENT_NUM
-        );
-        if (pageFragment != null) {
+        if(adapter != null){
+            NewsFragment pageFragment = adapter.getFragmentByPosition(CHOSEN_FRAGMENT_NUM);
             pageFragment.onNewsChanged(newsId);
         }
     }
