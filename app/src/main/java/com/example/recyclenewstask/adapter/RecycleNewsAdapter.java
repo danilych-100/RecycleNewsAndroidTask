@@ -116,36 +116,47 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if(o instanceof NewsModel){
                 NewsModel newsModel = (NewsModel) o;
                 if(!isDateGroupFound){
-                    if(newsModel.date.before(curNews.date)){
-                        addNewsWithHeader(curNews,0);
-                        return;
-                    } else if(formatDate(newsModel.date).equals(formatDate(curNews.date))) {
+                    if(formatDate(newsModel.date).equals(formatDate(curNews.date))){
                         isDateGroupFound = true;
+                    } else if(newsModel.date.before(curNews.date)) {
+                        addNewsWithHeader(curNews,i - 1);
+                        return;
                     }
                 } else if(!formatDate(newsModel.date).equals(formatDate(curNews.date))){
-                    this.dataset.add(i, curNews);
+                    this.dataset.add(i - 1, curNews);
                     this.notifyItemInserted(i);
                     return;
                 }
             }
         }
 
-        this.dataset.add(new NewsHeaderModel(formatDateStr(formatDate(curNews.date), null)));
-        this.dataset.add(curNews);
-        this.notifyItemRangeInserted(getItemCount() - 2, 2);
+        if(isDateGroupFound){
+            this.dataset.add(curNews);
+            this.notifyItemRangeChanged(getItemCount() - 1, 1);
+        } else {
+            addNewsWithHeader(curNews, getItemCount());
+        }
+
     }
 
     private void addNewsWithHeader(NewsModel curNews, int postitionStart){
-        this.dataset.add(new NewsHeaderModel(formatDateStr(formatDate(curNews.date), null)));
-        this.dataset.add(curNews);
-        this.notifyItemRangeInserted(postitionStart, 2);
+        this.dataset.add(postitionStart, curNews);
+        this.dataset.add(postitionStart, new NewsHeaderModel(formatDateStr(formatDate(curNews.date), null)));
+
+        this.notifyItemRangeChanged(postitionStart, 2);
     }
 
     public void removeNewsById(int newsId){
         int removeNewsId = -1;
+        boolean isNeedRemoveHeader = false;
         for(int i = 0; i < this.dataset.size(); i++){
             if(this.dataset.get(i) instanceof NewsModel){
                 if(((NewsModel)this.dataset.get(i)).id == newsId){
+                    boolean isPrevHeader = isModelHeader(i - 1);
+                    boolean isNextHeaderOrNone = (i + 1) == this.dataset.size() || isModelHeader(i + 1);
+                    if(i != 0 && isPrevHeader && isNextHeaderOrNone){
+                        isNeedRemoveHeader = true;
+                    }
                     removeNewsId = i;
                     break;
                 }
@@ -154,8 +165,17 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         if(removeNewsId != -1){
             this.dataset.remove(removeNewsId);
-            this.notifyItemRemoved(removeNewsId);
+            if(!isNeedRemoveHeader){
+                this.notifyItemRemoved(removeNewsId);
+            } else {
+                this.dataset.remove(removeNewsId - 1);
+                this.notifyItemRangeRemoved(removeNewsId - 1, 2);
+            }
         }
 
+    }
+
+    private boolean isModelHeader(int index){
+        return this.dataset.get(index) instanceof NewsHeaderModel;
     }
 }
