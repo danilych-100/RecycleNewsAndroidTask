@@ -11,6 +11,9 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
+import io.reactivex.Completable;
+import io.reactivex.Maybe;
+import io.reactivex.Single;
 
 import static androidx.room.OnConflictStrategy.REPLACE;
 
@@ -20,27 +23,16 @@ public interface ChosenNewsDAO {
     @Insert(onConflict = REPLACE)
     void insert(ChosenNews news);
 
-    @Insert
-    void insertMany(List<ChosenNews> newsList);
-
     @Query("DELETE FROM chosennews WHERE news_id = :newsId")
     void deleteByNewsId(int newsId);
 
-    @Update
-    void update(ChosenNews news);
-
-    @Nullable
-    @Query("SELECT * FROM chosennews WHERE id=:idToSelect")
-    ChosenNews getChosenNewsById(int idToSelect);
-
-    @Nullable
-    @Query("SELECT * FROM chosennews")
-    List<ChosenNews> getAllChosenNews();
+    @Query("DELETE FROM chosennews")
+    void deleteAll();
 
     @Nullable
     @Query("SELECT news_id FROM chosennews")
-    List<Integer> getChosenNewsIds();
+    Maybe<List<Integer>> getChosenNewsIds();
 
     @Query("SELECT count(*) > 0 FROM chosennews WHERE news_id=:newsId")
-    boolean isChosenNewsById(int newsId);
+    Single<Boolean> isChosenNewsById(int newsId);
 }

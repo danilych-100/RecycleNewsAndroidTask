@@ -3,9 +3,14 @@ package com.example.recyclenewstask;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.observers.DisposableCompletableObserver;
+import io.reactivex.observers.DisposableSingleObserver;
+import io.reactivex.schedulers.Schedulers;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
@@ -14,6 +19,7 @@ import android.widget.Toast;
 
 import com.example.recyclenewstask.enitites.ChosenNews;
 import com.example.recyclenewstask.enitites.News;
+import com.example.recyclenewstask.fragments.NewsFragment;
 import com.example.recyclenewstask.model.NewsModel;
 import com.example.recyclenewstask.repository.NewsRepository;
 
@@ -46,16 +52,45 @@ public class NewsInformationActivity extends AppCompatActivity {
             newsId = bundle.getInt(NEWS_ID_EXTRA);
         }
 
-        currentNews = newsRepository.getNewsById(newsId);
+        final int finalNewsId = newsId;
+        newsRepository.getNewsById(newsId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableSingleObserver<News>() {
+                    @Override
+                    public void onSuccess(News news) {
+                        currentNews = news;
 
-        if (currentNews == null) {
-            finish();
-        }
+                        getNewsStatusAndFillUi(finalNewsId);
+                    }
 
-        isNewsWasChosenOnCreate = newsRepository.isChosenNewsById(newsId);
-        currentChoice = isNewsWasChosenOnCreate;
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(NewsInformationActivity.class.getName(), e.getMessage());
+                        finish();
+                    }
+                });
+    }
 
-        fillNewsPage();
+    private void getNewsStatusAndFillUi(int finalNewsId) {
+        newsRepository.isChosenNewsById(finalNewsId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableSingleObserver<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean isChosen) {
+                        isNewsWasChosenOnCreate = isChosen;
+                        currentChoice = isNewsWasChosenOnCreate;
+
+                        fillNewsPage();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(NewsInformationActivity.class.getName(), e.getMessage());
+                        finish();
+                    }
+                });
     }
 
     private void fillNewsPage() {
@@ -108,11 +143,37 @@ public class NewsInformationActivity extends AppCompatActivity {
 
     private void setNewsResult(){
         if(isNewsWasChosenOnCreate && !currentChoice){
-            newsRepository.deleteByNewsId(currentNews.id);
+            newsRepository.deleteByNewsId(currentNews.id)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new DisposableCompletableObserver() {
+                        @Override
+                        public void onComplete() {
+
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.e(NewsInformationActivity.class.getName(), e.getMessage());
+                        }
+                    });
         }
 
         if(!isNewsWasChosenOnCreate && currentChoice){
-            newsRepository.insertChosenNews(new ChosenNews(currentNews.id));
+            newsRepository.insertChosenNews(new ChosenNews(currentNews.id))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new DisposableCompletableObserver() {
+                        @Override
+                        public void onComplete() {
+
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.e(NewsInformationActivity.class.getName(), e.getMessage());
+                        }
+                    });
         }
 
         Intent intent = new Intent();

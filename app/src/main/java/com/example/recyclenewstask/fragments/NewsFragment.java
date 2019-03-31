@@ -3,6 +3,7 @@ package com.example.recyclenewstask.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.BiFunction;
+import io.reactivex.functions.Function;
+import io.reactivex.observers.DisposableMaybeObserver;
+import io.reactivex.observers.DisposableSingleObserver;
+import io.reactivex.schedulers.Schedulers;
 
 import static com.example.recyclenewstask.mapper.NewsMapper.mapNewsEntityToModel;
 import static com.example.recyclenewstask.mapper.NewsMapper.mapNewsListEntityToModel;
@@ -82,29 +89,60 @@ public class NewsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.news_page, container, false);
+        final View view = inflater.inflate(R.layout.news_page, container, false);
 
-        List<Object> newsObjects;
         switch (newsStatus){
             case RELATED:
-                newsObjects = NewsUtils.createNewsObjectsForDateGroups(
-                        NewsUtils.groupNewsByDate(mapNewsListEntityToModel(
-                                newsRepository.getAllNews(),
-                                false)
-                        ),
-                        getContext()
-                );
-                createRecycleViewForNews(view, newsObjects);
+                newsRepository.getAllNews()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new DisposableMaybeObserver<List<News>>() {
+
+                            @Override
+                            public void onSuccess(List<News> news) {
+                                List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
+                                        NewsUtils.groupNewsByDate(mapNewsListEntityToModel(news, false)),
+                                        getContext()
+                                );
+                                createRecycleViewForNews(view, newsObjects);
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                Log.e(NewsFragment.class.getName(), e.getMessage());
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                createRecycleViewForNews(view, new ArrayList<>());
+                            }
+                        });
                 break;
             case CHOSEN:
-                newsObjects = NewsUtils.createNewsObjectsForDateGroups(
-                        NewsUtils.groupNewsByDate(mapNewsListEntityToModel(
-                                newsRepository.getAllChosenNewsByIds(),
-                                true)
-                        ),
-                        getContext()
-                );
-                chosenNewsAdapter = createRecycleViewForNews(view, newsObjects);
+                newsRepository.getAllChosenNewsByIds()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new DisposableMaybeObserver<List<News>>() {
+
+                            @Override
+                            public void onSuccess(List<News> news) {
+                                List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
+                                        NewsUtils.groupNewsByDate(mapNewsListEntityToModel(news, false)),
+                                        getContext()
+                                );
+                                chosenNewsAdapter = createRecycleViewForNews(view, newsObjects);
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                Log.e(NewsFragment.class.getName(), e.getMessage());
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                chosenNewsAdapter = createRecycleViewForNews(view, new ArrayList<>());
+                            }
+                        });
                 break;
         }
 
@@ -120,16 +158,33 @@ public class NewsFragment extends Fragment {
         }
     }
 
-    public void onNewsChanged(int newsId){
-        News news = newsRepository.getNewsById(newsId);
-        NewsModel newsModel = mapNewsEntityToModel(news, newsRepository.isChosenNewsById(newsId));
-        if(newsModel != null && chosenNewsAdapter != null){
-            if(newsModel.isChosen){
-                chosenNewsAdapter.addNews(newsModel);
-            } else {
-                chosenNewsAdapter.removeNewsById(newsId);
-            }
-        }
+    public void onNewsChanged(final int newsId){
+        newsRepository.getNewsById(newsId)
+                .zipWith(newsRepository.isChosenNewsById(newsId), new BiFunction<News, Boolean, NewsModel>() {
+                    @Override
+                    public NewsModel apply(News news, Boolean isChosen) throws Exception {
+                        return mapNewsEntityToModel(news, isChosen);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableSingleObserver<NewsModel>() {
+                    @Override
+                    public void onSuccess(NewsModel news) {
+                        if(news != null && chosenNewsAdapter != null){
+                            if(news.isChosen){
+                                chosenNewsAdapter.addNews(news);
+                            } else {
+                                chosenNewsAdapter.removeNewsById(newsId);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(NewsFragment.class.getName(), e.getMessage());
+                    }
+                });
     }
 
     private RecycleNewsAdapter createRecycleViewForNews(final View view, final List<Object> newsObjects){
