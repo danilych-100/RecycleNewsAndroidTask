@@ -29,6 +29,8 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableMaybeObserver;
@@ -44,6 +46,8 @@ public class NewsFragment extends Fragment {
     private static final String IS_NEWS_STATUS_CHANGED = "isNewsStatusChanged";
 
     private static final String NEWS_STATUS_ARG = "NewsStatusArg";
+
+    private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     private NewsStatus newsStatus;
 
@@ -91,12 +95,13 @@ public class NewsFragment extends Fragment {
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.news_page, container, false);
 
+        Disposable disposable = null;
         switch (newsStatus){
             case RELATED:
-                newsRepository.getAllNews()
+                disposable = newsRepository.getAllNews()
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new DisposableMaybeObserver<List<News>>() {
+                        .subscribeWith(new DisposableMaybeObserver<List<News>>() {
 
                             @Override
                             public void onSuccess(List<News> news) {
@@ -119,10 +124,10 @@ public class NewsFragment extends Fragment {
                         });
                 break;
             case CHOSEN:
-                newsRepository.getAllChosenNewsByIds()
+                disposable = newsRepository.getAllChosenNewsByIds()
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new DisposableMaybeObserver<List<News>>() {
+                        .subscribeWith(new DisposableMaybeObserver<List<News>>() {
 
                             @Override
                             public void onSuccess(List<News> news) {
@@ -145,6 +150,7 @@ public class NewsFragment extends Fragment {
                         });
                 break;
         }
+        compositeDisposable.add(disposable);
 
         return view;
     }
@@ -159,7 +165,7 @@ public class NewsFragment extends Fragment {
     }
 
     public void onNewsChanged(final int newsId){
-        newsRepository.getNewsById(newsId)
+        Disposable disposable = newsRepository.getNewsById(newsId)
                 .zipWith(newsRepository.isChosenNewsById(newsId), new BiFunction<News, Boolean, NewsModel>() {
                     @Override
                     public NewsModel apply(News news, Boolean isChosen) throws Exception {
@@ -168,7 +174,7 @@ public class NewsFragment extends Fragment {
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new DisposableSingleObserver<NewsModel>() {
+                .subscribeWith(new DisposableSingleObserver<NewsModel>() {
                     @Override
                     public void onSuccess(NewsModel news) {
                         if(news != null && chosenNewsAdapter != null){
@@ -185,6 +191,7 @@ public class NewsFragment extends Fragment {
                         Log.e(NewsFragment.class.getName(), e.getMessage());
                     }
                 });
+        compositeDisposable.add(disposable);
     }
 
     private RecycleNewsAdapter createRecycleViewForNews(final View view, final List<Object> newsObjects){
@@ -209,5 +216,11 @@ public class NewsFragment extends Fragment {
         );
 
         return newsAdapter;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        compositeDisposable.dispose();
     }
 }
