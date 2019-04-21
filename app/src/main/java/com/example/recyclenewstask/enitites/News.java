@@ -9,7 +9,7 @@ import androidx.room.PrimaryKey;
 @Entity
 public class News {
 
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     public int id;
 
     @ColumnInfo(name = "title")

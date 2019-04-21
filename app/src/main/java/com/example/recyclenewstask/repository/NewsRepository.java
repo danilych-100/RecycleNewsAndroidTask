@@ -52,7 +52,7 @@ public class NewsRepository {
                     INSTANCE.setChosenNewsDAO(database.chosenNewsDAO());
 
                     INSTANCE.deleteAllFromTables()
-                            .andThen(INSTANCE.insertNews(NewsMapper.mapNewsModelListToEntity(NewsUtils.generateNews(30))))
+                            //.andThen(INSTANCE.insertNews(NewsMapper.mapNewsModelListToEntity(NewsUtils.generateNews(30))))
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(new DisposableCompletableObserver() {

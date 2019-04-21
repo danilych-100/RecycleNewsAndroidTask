@@ -21,6 +21,7 @@ import com.example.recyclenewstask.utils.NewsUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -99,6 +100,19 @@ public class NewsFragment extends Fragment {
         switch (newsStatus){
             case RELATED:
                 disposable = newsRepository.getAllNews()
+                        .map(new Function<List<News>, List<News>>() {
+                            @Override
+                            public List<News> apply(List<News> news) throws Exception {
+                                List<News> sortedList = new ArrayList<>(news);
+                                Collections.sort(sortedList, new Comparator<News>() {
+                                    @Override
+                                    public int compare(News o1, News o2) {
+                                        return o1.date.compareTo(o2.date);
+                                    }
+                                });
+                                return sortedList;
+                            }
+                        })
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeWith(new DisposableMaybeObserver<List<News>>() {
