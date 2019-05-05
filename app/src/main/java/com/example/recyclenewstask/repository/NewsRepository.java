@@ -106,6 +106,16 @@ public class NewsRepository {
         });
     }
 
+    public Completable saveNews(final News news) {
+        return Completable.fromRunnable(new Runnable() {
+            @Override
+            public void run() {
+                newsDAO.insert(news);
+                newsDAO.update(news);
+            }
+        });
+    }
+
     public Completable insertChosenNews(final ChosenNews chosenNews) {
         return Completable.fromRunnable(new Runnable() {
             @Override

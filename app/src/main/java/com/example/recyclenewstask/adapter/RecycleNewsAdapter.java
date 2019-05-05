@@ -1,5 +1,6 @@
 package com.example.recyclenewstask.adapter;
 
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -81,8 +82,8 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             case TYPE_NEWS: {
                 NewsModel curNews = (NewsModel) this.dataset.get(position);
                 NewsViewHolder viewHolder = (NewsViewHolder) holder;
-                viewHolder.getNewsTitle().setText(curNews.title);
-                viewHolder.getNewsDesc().setText(curNews.desc);
+                viewHolder.getNewsTitle().setText(Html.fromHtml(curNews.title));
+                viewHolder.getNewsDesc().setText(Html.fromHtml(curNews.desc));
                 viewHolder.getNewsDate().setText(formatDate(curNews.date));
                 break;
             }

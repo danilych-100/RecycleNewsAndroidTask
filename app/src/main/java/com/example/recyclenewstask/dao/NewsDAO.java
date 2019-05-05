@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 import io.reactivex.Completable;
@@ -17,8 +18,14 @@ import io.reactivex.Single;
 @Dao
 public interface NewsDAO {
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertMany(List<News> newsList);
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void insert(News news);
+
+    @Update(onConflict = OnConflictStrategy.IGNORE)
+    void update(News news);
 
     @Nullable
     @Query("SELECT * FROM news WHERE id=:idToSelect")

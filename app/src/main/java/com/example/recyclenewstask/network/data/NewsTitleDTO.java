@@ -3,7 +3,9 @@ package com.example.recyclenewstask.network.data;
 
 import com.google.gson.annotations.SerializedName;
 
-public class NewsTitleDTO {
+import java.io.Serializable;
+
+public class NewsTitleDTO implements Serializable {
 
     @SerializedName("id")
     private int id;

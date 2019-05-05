@@ -1,5 +1,6 @@
 package com.example.recyclenewstask.fragments;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.example.recyclenewstask.NewsInformationActivity;
 import com.example.recyclenewstask.R;
@@ -14,14 +16,16 @@ import com.example.recyclenewstask.adapter.RecycleNewsAdapter;
 import com.example.recyclenewstask.enitites.News;
 import com.example.recyclenewstask.listeners.INewsDataPassListener;
 import com.example.recyclenewstask.listeners.NewsClickListener;
-import com.example.recyclenewstask.model.NewsHeaderModel;
+import com.example.recyclenewstask.mapper.NewsMapper;
 import com.example.recyclenewstask.model.NewsModel;
+import com.example.recyclenewstask.network.NetworkService;
+import com.example.recyclenewstask.network.data.NewsHolderDTO;
+import com.example.recyclenewstask.network.data.NewsTitleDTO;
 import com.example.recyclenewstask.repository.NewsRepository;
 import com.example.recyclenewstask.utils.NewsUtils;
+import com.example.recyclenewstask.utils.ProgressUtils;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -33,10 +37,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
-import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableMaybeObserver;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static com.example.recyclenewstask.mapper.NewsMapper.mapNewsEntityToModel;
 import static com.example.recyclenewstask.mapper.NewsMapper.mapNewsListEntityToModel;
@@ -57,6 +63,8 @@ public class NewsFragment extends Fragment {
     private RecycleNewsAdapter chosenNewsAdapter;
 
     private NewsRepository newsRepository;
+
+    private NetworkService networkService;
 
     public static NewsFragment newInstance(NewsStatus status) {
         Bundle args = new Bundle();
@@ -85,6 +93,8 @@ public class NewsFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         newsRepository = NewsRepository.getInstance(getContext());
+        networkService = NetworkService.getInstance();
+
         Bundle args = getArguments();
         if (args != null){
             newsStatus = (NewsStatus) args.get(NEWS_STATUS_ARG);
@@ -99,41 +109,38 @@ public class NewsFragment extends Fragment {
         Disposable disposable = null;
         switch (newsStatus){
             case RELATED:
-                disposable = newsRepository.getAllNews()
-                        .map(new Function<List<News>, List<News>>() {
+                final ProgressDialog progressDialog = ProgressUtils.createNetworkProgressDialog(getContext());
+                progressDialog.show();
+                networkService
+                        .getNewsApi()
+                        .getAllNews()
+                        .enqueue(new Callback<NewsHolderDTO>() {
                             @Override
-                            public List<News> apply(List<News> news) throws Exception {
-                                List<News> sortedList = new ArrayList<>(news);
-                                Collections.sort(sortedList, new Comparator<News>() {
-                                    @Override
-                                    public int compare(News o1, News o2) {
-                                        return o1.date.compareTo(o2.date);
+                            public void onResponse(Call<NewsHolderDTO> call, Response<NewsHolderDTO> response) {
+                                if(!response.isSuccessful()){
+                                    showNetworkError();
+                                } else {
+                                    List<NewsTitleDTO> newsTitles = response.body().getPayloads();
+                                    List<News> newsList = new ArrayList<>();
+                                    for(NewsTitleDTO newsTitleDTO : newsTitles){
+                                        News news = NewsMapper.mapNewsTitleDTOToEntity(newsTitleDTO);
+                                        newsList.add(news);
                                     }
-                                });
-                                return sortedList;
-                            }
-                        })
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeWith(new DisposableMaybeObserver<List<News>>() {
 
-                            @Override
-                            public void onSuccess(List<News> news) {
-                                List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
-                                        NewsUtils.groupNewsByDate(mapNewsListEntityToModel(news, false)),
-                                        getContext()
-                                );
-                                createRecycleViewForNews(view, newsObjects);
+                                    List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
+                                            NewsUtils.groupNewsByDate(mapNewsListEntityToModel(newsList, false)),
+                                            getContext()
+                                    );
+                                    createRecycleViewForNews(view, newsObjects);
+
+                                    progressDialog.dismiss();
+                                }
                             }
 
                             @Override
-                            public void onError(Throwable e) {
-                                Log.e(NewsFragment.class.getName(), e.getMessage());
-                            }
-
-                            @Override
-                            public void onComplete() {
-                                createRecycleViewForNews(view, new ArrayList<>());
+                            public void onFailure(Call<NewsHolderDTO> call, Throwable t) {
+                                progressDialog.dismiss();
+                                showNetworkError();
                             }
                         });
                 break;
@@ -162,9 +169,9 @@ public class NewsFragment extends Fragment {
                                 chosenNewsAdapter = createRecycleViewForNews(view, new ArrayList<>());
                             }
                         });
+                compositeDisposable.add(disposable);
                 break;
         }
-        compositeDisposable.add(disposable);
 
         return view;
     }
@@ -236,5 +243,10 @@ public class NewsFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         compositeDisposable.dispose();
+    }
+
+    private void showNetworkError(){
+        Toast toast = Toast.makeText(getContext(), "Ошибка доступа к интернету", Toast.LENGTH_LONG);
+        toast.show();
     }
 }

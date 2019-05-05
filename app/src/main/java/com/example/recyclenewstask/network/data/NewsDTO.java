@@ -2,18 +2,20 @@ package com.example.recyclenewstask.network.data;
 
 import com.google.gson.annotations.SerializedName;
 
-public class NewsDTO {
+import java.io.Serializable;
+
+public class NewsDTO implements Serializable {
 
     @SerializedName("payload")
     private Payload payload;
-
-    @SerializedName("content")
-    private String content;
 
     public class Payload{
 
         @SerializedName("title")
         private NewsTitleDTO title;
+
+        @SerializedName("content")
+        private String content;
 
         public NewsTitleDTO getTitle() {
             return title;
@@ -21,6 +23,14 @@ public class NewsDTO {
 
         public void setTitle(NewsTitleDTO title) {
             this.title = title;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public void setContent(String content) {
+            this.content = content;
         }
     }
 
@@ -30,13 +40,5 @@ public class NewsDTO {
 
     public void setPayload(Payload payload) {
         this.payload = payload;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
     }
 }

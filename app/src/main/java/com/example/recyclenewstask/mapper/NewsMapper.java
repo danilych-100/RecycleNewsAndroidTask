@@ -66,7 +66,7 @@ public class NewsMapper {
 
     public static News mapNewsDTOToEntity(final NewsDTO newsDTO){
         News news = mapNewsTitleDTOToEntity(newsDTO.getPayload().getTitle());
-        news.fullContent = newsDTO.getContent();
+        news.fullContent = newsDTO.getPayload().getContent();
 
         return news;
     }

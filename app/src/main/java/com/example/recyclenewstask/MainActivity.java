@@ -1,9 +1,13 @@
 package com.example.recyclenewstask;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.recyclenewstask.enitites.News;
@@ -16,6 +20,7 @@ import com.example.recyclenewstask.network.data.NewsHolderDTO;
 import com.example.recyclenewstask.network.data.NewsTitleDTO;
 import com.example.recyclenewstask.repository.NewsRepository;
 import com.google.android.material.tabs.TabLayout;
+import com.pnikosis.materialishprogress.ProgressWheel;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,55 +49,7 @@ public class MainActivity extends AppCompatActivity implements INewsDataPassList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        updateDBFromNetwork();
         createTabLayout();
-    }
-
-    private void updateDBFromNetwork(){
-        NetworkService.getInstance()
-                .getNewsApi()
-                .getAllNews()
-                .enqueue(new Callback<NewsHolderDTO>() {
-                    @Override
-                    public void onResponse(Call<NewsHolderDTO> call, Response<NewsHolderDTO> response) {
-                        if(!response.isSuccessful()){
-                            showNetworkError();
-                        } else {
-                            List<NewsTitleDTO> newsTitles = response.body().getPayloads();
-                            List<News> newsList = new ArrayList<>();
-                            for(NewsTitleDTO newsTitleDTO : newsTitles){
-                                News news = NewsMapper.mapNewsTitleDTOToEntity(newsTitleDTO);
-                                newsList.add(news);
-                            }
-
-                            NewsRepository.getInstance(getApplicationContext())
-                                    .insertNews(newsList)
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe(new DisposableCompletableObserver() {
-                                        @Override
-                                        public void onComplete() {
-                                            Log.i(NewsInformationActivity.class.getName(), "Сохранили");
-                                        }
-
-                                        @Override
-                                        public void onError(Throwable e) {
-                                            Log.e(NewsInformationActivity.class.getName(), e.getMessage());
-                                        }
-                                    });
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<NewsHolderDTO> call, Throwable t) {
-                        showNetworkError();
-                    }
-                });
-    }
-
-    private void showNetworkError(){
-        Toast toast = Toast.makeText(getApplicationContext(), "Ошибка доступа к интернету", Toast.LENGTH_LONG);
-        toast.show();
     }
 
     @Override
