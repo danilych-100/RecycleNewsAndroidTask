@@ -104,6 +104,12 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         return this.dataset.size();
     }
 
+    public void updateAllNews(List<Object> newDataSet){
+        this.dataset.clear();
+        this.dataset.addAll(newDataSet);
+        notifyDataSetChanged();
+    }
+
     public void addNews(NewsModel curNews){
         if(this.dataset.size() == 0){
             addNewsWithHeader(curNews,0);

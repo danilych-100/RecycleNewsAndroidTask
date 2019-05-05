@@ -27,6 +27,15 @@ public interface NewsDAO {
     @Update(onConflict = OnConflictStrategy.IGNORE)
     void update(News news);
 
+    @Delete
+    void delete(List<News> news);
+
+    @Query("SELECT COUNT(id) FROM news")
+    Single<Integer> getRowsCount();
+
+    @Query("SELECT * FROM news ORDER BY date DESC LIMIT :limitCount")
+    Maybe<List<News>> getLastRowsByLimitAndOrderByDate(int limitCount);
+
     @Nullable
     @Query("SELECT * FROM news WHERE id=:idToSelect")
     Single<News> getNewsById(int idToSelect);

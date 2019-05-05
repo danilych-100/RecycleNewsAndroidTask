@@ -1,6 +1,9 @@
 package com.example.recyclenewstask;
 
 import android.app.ProgressDialog;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,6 +22,7 @@ import com.example.recyclenewstask.network.NetworkService;
 import com.example.recyclenewstask.network.data.NewsHolderDTO;
 import com.example.recyclenewstask.network.data.NewsTitleDTO;
 import com.example.recyclenewstask.repository.NewsRepository;
+import com.example.recyclenewstask.service.ClearDBScheduler;
 import com.google.android.material.tabs.TabLayout;
 import com.pnikosis.materialishprogress.ProgressWheel;
 
@@ -51,6 +55,8 @@ public class MainActivity extends AppCompatActivity implements INewsDataPassList
         setContentView(R.layout.activity_main);
 
         createTabLayout();
+        createDBCleaner();
+
     }
 
     @Override
@@ -74,5 +80,14 @@ public class MainActivity extends AppCompatActivity implements INewsDataPassList
             NewsFragment pageFragment = adapter.getFragmentByPosition(CHOSEN_FRAGMENT_NUM);
             pageFragment.onNewsChanged(newsId);
         }
+    }
+
+    private void createDBCleaner(){
+        ComponentName serviceComponent = new ComponentName(this, ClearDBScheduler.class);
+        JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
+        builder.setMinimumLatency(1000); // wait at least
+        builder.setOverrideDeadline(30 * 1000); // maximum delay
+        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        jobScheduler.schedule(builder.build());
     }
 }

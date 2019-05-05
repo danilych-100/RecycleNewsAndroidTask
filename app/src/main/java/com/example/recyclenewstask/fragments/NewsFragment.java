@@ -66,6 +66,7 @@ public class NewsFragment extends Fragment {
     private INewsDataPassListener mCallback;
 
     private RecycleNewsAdapter chosenNewsAdapter;
+    private RecycleNewsAdapter relatedNewsAdapter;
 
     private NewsRepository newsRepository;
 
@@ -111,7 +112,6 @@ public class NewsFragment extends Fragment {
                              Bundle savedInstanceState) {
         final SwipeRefreshLayout view = (SwipeRefreshLayout) inflater.inflate(R.layout.news_page, container, false);
 
-        Disposable disposable = null;
         switch (newsStatus){
             case RELATED:
                 getNewsForRelatedPage(view);
@@ -130,7 +130,6 @@ public class NewsFragment extends Fragment {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(new DisposableMaybeObserver<List<News>>() {
-
                     @Override
                     public void onSuccess(List<News> news) {
                         List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
@@ -178,7 +177,7 @@ public class NewsFragment extends Fragment {
                                     NewsUtils.groupNewsByDate(mapNewsListEntityToModel(newsList, false)),
                                     getContext()
                             );
-                            createRecycleViewForNews(view, newsObjects);
+                            relatedNewsAdapter = createRecycleViewForNews(view, newsObjects);
 
                             progressDialog.dismiss();
                         }
@@ -186,8 +185,33 @@ public class NewsFragment extends Fragment {
 
                     @Override
                     public void onFailure(Call<NewsHolderDTO> call, Throwable t) {
-                        progressDialog.dismiss();
                         showNetworkError();
+                        Disposable disposable = newsRepository.getAllNews()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeWith(new DisposableMaybeObserver<List<News>>() {
+                                    @Override
+                                    public void onSuccess(List<News> news) {
+                                        List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
+                                                NewsUtils.groupNewsByDate(mapNewsListEntityToModel(news, false)),
+                                                getContext()
+                                        );
+                                        relatedNewsAdapter = createRecycleViewForNews(view, newsObjects);
+                                    }
+
+                                    @Override
+                                    public void onError(Throwable e) {
+                                        Log.e(NewsFragment.class.getName(), e.getMessage());
+
+                                    }
+
+                                    @Override
+                                    public void onComplete() {
+                                        createRecycleViewForNews(view, new ArrayList<>());
+                                    }
+                                });
+                        compositeDisposable.add(disposable);
+                        progressDialog.dismiss();
                     }
                 });
     }
@@ -255,13 +279,42 @@ public class NewsFragment extends Fragment {
         view.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
-                Toast toast = Toast.makeText(getContext(), "Проверочке", Toast.LENGTH_LONG);
-                toast.show();
+                if(newsStatus == NewsStatus.RELATED){
+                    networkService
+                            .getNewsApi()
+                            .getAllNews()
+                            .enqueue(new Callback<NewsHolderDTO>() {
+                                @Override
+                                public void onResponse(Call<NewsHolderDTO> call, Response<NewsHolderDTO> response) {
+                                    if(!response.isSuccessful()){
+                                        showNetworkError();
+                                    } else {
+                                        List<NewsTitleDTO> newsTitles = response.body().getPayloads();
+                                        List<News> newsList = new ArrayList<>();
+                                        for(NewsTitleDTO newsTitleDTO : newsTitles){
+                                            News news = NewsMapper.mapNewsTitleDTOToEntity(newsTitleDTO);
+                                            newsList.add(news);
+                                        }
 
-                view.setRefreshing(false);
+                                        newsList.subList(0, MAX_NEWS_COUNT);
+
+                                        List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
+                                                NewsUtils.groupNewsByDate(mapNewsListEntityToModel(newsList, false)),
+                                                getContext()
+                                        );
+
+                                        relatedNewsAdapter.updateAllNews(newsObjects);
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<NewsHolderDTO> call, Throwable t) {
+                                    view.setRefreshing(false);
+                                    showNetworkError();
+                                }
+                            });
+                    view.setRefreshing(false);
+                }
             }
         });
 

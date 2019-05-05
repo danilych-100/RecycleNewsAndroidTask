@@ -97,6 +97,23 @@ public class NewsRepository {
         return chosenNewsDAO.isChosenNewsById(newsId);
     }
 
+    public Single<Integer> getRowsCount(){
+        return newsDAO.getRowsCount();
+    }
+
+    public Maybe<List<News>> getLastRowsByLimitAndOrderByDate(int limitCount){
+        return newsDAO.getLastRowsByLimitAndOrderByDate(limitCount);
+    }
+
+    public Completable deleteSomeRows(final List<News> news){
+        return Completable.fromRunnable(new Runnable() {
+            @Override
+            public void run() {
+                newsDAO.delete(news);
+            }
+        });
+    }
+
     public Completable insertNews(final List<News> news) {
         return Completable.fromRunnable(new Runnable() {
             @Override
