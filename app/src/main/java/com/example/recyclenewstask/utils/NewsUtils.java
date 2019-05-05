@@ -6,6 +6,7 @@ import com.example.recyclenewstask.R;
 import com.example.recyclenewstask.model.NewsHeaderModel;
 import com.example.recyclenewstask.model.NewsModel;
 
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,7 +47,25 @@ public class NewsUtils {
     }
 
     public static Map<String, List<NewsModel>> groupNewsByDate(List<NewsModel> newsModels){
-        Map<String, List<NewsModel>> map = new TreeMap<>(Collections.reverseOrder());
+        Map<String, List<NewsModel>> map = new TreeMap<>(new Comparator<String>() {
+            @Override
+            public int compare(String formattedDate1, String formattedDate2) {
+                String[] dayMonthYear1 = formattedDate1.split("/");
+                String[] dayMonthYear2 = formattedDate2.split("/");
+                if(Integer.parseInt(dayMonthYear1[2]) == Integer.parseInt(dayMonthYear2[2])){
+                    if(Integer.parseInt(dayMonthYear1[1]) == Integer.parseInt(dayMonthYear2[1])){
+                        if(Integer.parseInt(dayMonthYear1[0]) == Integer.parseInt(dayMonthYear2[0])){
+                            return 0;
+                        } else {
+                            return - new BigInteger(dayMonthYear1[0]).compareTo(new BigInteger(dayMonthYear2[0]));
+                        }
+                    } else {
+                        return - new BigInteger(dayMonthYear1[1]).compareTo(new BigInteger(dayMonthYear2[1]));
+                    }
+                }
+                return - new BigInteger(dayMonthYear1[2]).compareTo(new BigInteger(dayMonthYear2[2]));
+            }
+        });
 
         for(NewsModel news : newsModels){
             String strDate = sdf.format(news.date);

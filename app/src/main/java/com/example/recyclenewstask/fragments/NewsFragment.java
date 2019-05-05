@@ -26,6 +26,8 @@ import com.example.recyclenewstask.utils.NewsUtils;
 import com.example.recyclenewstask.utils.ProgressUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -33,6 +35,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -53,6 +56,8 @@ public class NewsFragment extends Fragment {
     private static final String IS_NEWS_STATUS_CHANGED = "isNewsStatusChanged";
 
     private static final String NEWS_STATUS_ARG = "NewsStatusArg";
+
+    private static final int MAX_NEWS_COUNT = 100;
 
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
@@ -104,76 +109,87 @@ public class NewsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.news_page, container, false);
+        final SwipeRefreshLayout view = (SwipeRefreshLayout) inflater.inflate(R.layout.news_page, container, false);
 
         Disposable disposable = null;
         switch (newsStatus){
             case RELATED:
-                final ProgressDialog progressDialog = ProgressUtils.createNetworkProgressDialog(getContext());
-                progressDialog.show();
-                networkService
-                        .getNewsApi()
-                        .getAllNews()
-                        .enqueue(new Callback<NewsHolderDTO>() {
-                            @Override
-                            public void onResponse(Call<NewsHolderDTO> call, Response<NewsHolderDTO> response) {
-                                if(!response.isSuccessful()){
-                                    showNetworkError();
-                                } else {
-                                    List<NewsTitleDTO> newsTitles = response.body().getPayloads();
-                                    List<News> newsList = new ArrayList<>();
-                                    for(NewsTitleDTO newsTitleDTO : newsTitles){
-                                        News news = NewsMapper.mapNewsTitleDTOToEntity(newsTitleDTO);
-                                        newsList.add(news);
-                                    }
-
-                                    List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
-                                            NewsUtils.groupNewsByDate(mapNewsListEntityToModel(newsList, false)),
-                                            getContext()
-                                    );
-                                    createRecycleViewForNews(view, newsObjects);
-
-                                    progressDialog.dismiss();
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(Call<NewsHolderDTO> call, Throwable t) {
-                                progressDialog.dismiss();
-                                showNetworkError();
-                            }
-                        });
+                getNewsForRelatedPage(view);
                 break;
             case CHOSEN:
-                disposable = newsRepository.getAllChosenNewsByIds()
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeWith(new DisposableMaybeObserver<List<News>>() {
-
-                            @Override
-                            public void onSuccess(List<News> news) {
-                                List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
-                                        NewsUtils.groupNewsByDate(mapNewsListEntityToModel(news, false)),
-                                        getContext()
-                                );
-                                chosenNewsAdapter = createRecycleViewForNews(view, newsObjects);
-                            }
-
-                            @Override
-                            public void onError(Throwable e) {
-                                Log.e(NewsFragment.class.getName(), e.getMessage());
-                            }
-
-                            @Override
-                            public void onComplete() {
-                                chosenNewsAdapter = createRecycleViewForNews(view, new ArrayList<>());
-                            }
-                        });
-                compositeDisposable.add(disposable);
+                getNewsForChosenPage(view);
                 break;
         }
 
         return view;
+    }
+
+    private void getNewsForChosenPage(final SwipeRefreshLayout view) {
+        Disposable disposable;
+        disposable = newsRepository.getAllChosenNewsByIds()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableMaybeObserver<List<News>>() {
+
+                    @Override
+                    public void onSuccess(List<News> news) {
+                        List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
+                                NewsUtils.groupNewsByDate(mapNewsListEntityToModel(news, false)),
+                                getContext()
+                        );
+                        chosenNewsAdapter = createRecycleViewForNews(view, newsObjects);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(NewsFragment.class.getName(), e.getMessage());
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        chosenNewsAdapter = createRecycleViewForNews(view, new ArrayList<>());
+                    }
+                });
+        compositeDisposable.add(disposable);
+    }
+
+    private void getNewsForRelatedPage(final SwipeRefreshLayout view) {
+        final ProgressDialog progressDialog = ProgressUtils.createNetworkProgressDialog(getContext());
+        progressDialog.show();
+        networkService
+                .getNewsApi()
+                .getAllNews()
+                .enqueue(new Callback<NewsHolderDTO>() {
+                    @Override
+                    public void onResponse(Call<NewsHolderDTO> call, Response<NewsHolderDTO> response) {
+                        if(!response.isSuccessful()){
+                            showNetworkError();
+                        } else {
+                            List<NewsTitleDTO> newsTitles = response.body().getPayloads();
+                            List<News> newsList = new ArrayList<>();
+                            for(NewsTitleDTO newsTitleDTO : newsTitles){
+                                News news = NewsMapper.mapNewsTitleDTOToEntity(newsTitleDTO);
+                                newsList.add(news);
+                            }
+
+                            newsList.subList(0, MAX_NEWS_COUNT);
+
+                            List<Object> newsObjects = NewsUtils.createNewsObjectsForDateGroups(
+                                    NewsUtils.groupNewsByDate(mapNewsListEntityToModel(newsList, false)),
+                                    getContext()
+                            );
+                            createRecycleViewForNews(view, newsObjects);
+
+                            progressDialog.dismiss();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<NewsHolderDTO> call, Throwable t) {
+                        progressDialog.dismiss();
+                        showNetworkError();
+                    }
+                });
     }
 
     @Override
@@ -215,7 +231,7 @@ public class NewsFragment extends Fragment {
         compositeDisposable.add(disposable);
     }
 
-    private RecycleNewsAdapter createRecycleViewForNews(final View view, final List<Object> newsObjects){
+    private RecycleNewsAdapter createRecycleViewForNews(final SwipeRefreshLayout view, final List<Object> newsObjects){
         LinearLayoutManager viewManager = new LinearLayoutManager(view.getContext());
         RecycleNewsAdapter newsAdapter = new RecycleNewsAdapter(
                 newsObjects,
@@ -235,6 +251,19 @@ public class NewsFragment extends Fragment {
                 recyclerView.getContext(),
                 viewManager.getOrientation())
         );
+
+        view.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Your code to refresh the list here.
+                // Make sure you call swipeContainer.setRefreshing(false)
+                // once the network request has completed successfully.
+                Toast toast = Toast.makeText(getContext(), "Проверочке", Toast.LENGTH_LONG);
+                toast.show();
+
+                view.setRefreshing(false);
+            }
+        });
 
         return newsAdapter;
     }
