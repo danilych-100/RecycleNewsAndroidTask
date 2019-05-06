@@ -19,7 +19,6 @@ import com.example.recyclenewstask.listeners.NewsClickListener;
 import com.example.recyclenewstask.mapper.NewsMapper;
 import com.example.recyclenewstask.model.NewsModel;
 import com.example.recyclenewstask.network.NetworkService;
-import com.example.recyclenewstask.network.data.NewsHolderDTO;
 import com.example.recyclenewstask.network.data.NewsTitleDTO;
 import com.example.recyclenewstask.network.data.TinkoffApiResponse;
 import com.example.recyclenewstask.repository.NewsRepository;
@@ -27,8 +26,6 @@ import com.example.recyclenewstask.utils.NewsUtils;
 import com.example.recyclenewstask.utils.ProgressUtils;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -37,20 +34,15 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import io.reactivex.CompletableSource;
 import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
-import io.reactivex.observers.DisposableCompletableObserver;
 import io.reactivex.observers.DisposableMaybeObserver;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 import static com.example.recyclenewstask.mapper.NewsMapper.mapNewsEntityToModel;
 import static com.example.recyclenewstask.mapper.NewsMapper.mapNewsListEntityToModel;

@@ -34,7 +34,6 @@ import android.widget.Toast;
 import com.example.recyclenewstask.enitites.ChosenNews;
 import com.example.recyclenewstask.enitites.News;
 import com.example.recyclenewstask.network.NetworkService;
-import com.example.recyclenewstask.network.data.NewsDTO;
 import com.example.recyclenewstask.network.data.NewsItemDetails;
 import com.example.recyclenewstask.network.data.NewsTitleDTO;
 import com.example.recyclenewstask.network.data.TinkoffApiResponse;
@@ -130,33 +129,6 @@ public class NewsInformationActivity extends AppCompatActivity {
                 });
 
         compositeDisposable.add(disposable);
-                /*.enqueue(new Callback<NewsDTO>() {
-                    @Override
-                    public void onResponse(Call<NewsDTO> call, Response<NewsDTO> response) {
-                        if (!response.isSuccessful()) {
-                            getNewsByIDFromDB(finalNewsId);
-                        } else {
-                            NewsDTO newsInfo = response.body();
-                            NewsTitleDTO title = newsInfo.getPayload().getTitle();
-                            final News news = new News();
-                            news.id = title.getId();
-                            news.date = new Date(title.getPublicationDate().getMilliseconds());
-                            news.desc = title.getTitle();
-                            news.title = title.getTitle();
-                            news.fullContent = newsInfo.getPayload().getContent();
-
-                            saveNewsToDB(news);
-
-                            progressDialog.dismiss();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<NewsDTO> call, Throwable t) {
-                        getNewsByIDFromDB(finalNewsId);
-                        progressDialog.dismiss();
-                    }
-                });*/
     }
 
     private void fillNewsPage() {
