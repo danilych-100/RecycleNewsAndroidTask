@@ -30,13 +30,14 @@ public class ClearDBScheduler extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        NewsRepository.getInstance(this)
+        NewsRepository.getInstance()
                 .getRowsCount()
                 .flatMapMaybe(new Function<Integer, MaybeSource<List<News>>>() {
                     @Override
                     public MaybeSource<List<News>> apply(Integer rowsCount) throws Exception {
                         if(rowsCount > MAX_NEWS_COUNT){
-                            return NewsRepository.getInstance(getApplicationContext()).getLastRowsByLimitAndOrderByDate(rowsCount - MAX_NEWS_COUNT);
+                            return NewsRepository.getInstance()
+                                    .getLastRowsByLimitAndOrderByDate(rowsCount - MAX_NEWS_COUNT);
                         }
 
                         return Maybe.empty();
@@ -46,7 +47,8 @@ public class ClearDBScheduler extends JobService {
                     @Override
                     public CompletableSource apply(List<News> news) throws Exception {
                         if(news != null && news.size() > 0){
-                            return NewsRepository.getInstance(getApplicationContext()).deleteSomeRows(news);
+                            return NewsRepository.getInstance()
+                                    .deleteSomeRows(news);
                         }
 
                         return Completable.complete();

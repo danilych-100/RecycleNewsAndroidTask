@@ -13,19 +13,7 @@ public class NewsHolderDTO implements Serializable {
     @SerializedName("payload")
     private List<NewsTitleDTO> payloads;
 
-    public String getStatusCode() {
-        return statusCode;
-    }
-
-    public void setStatusCode(String statusCode) {
-        this.statusCode = statusCode;
-    }
-
     public List<NewsTitleDTO> getPayloads() {
         return payloads;
-    }
-
-    public void setPayloads(List<NewsTitleDTO> payloads) {
-        this.payloads = payloads;
     }
 }

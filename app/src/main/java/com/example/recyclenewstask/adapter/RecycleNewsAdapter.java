@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.core.text.HtmlCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import static com.example.recyclenewstask.utils.NewsUtils.formatDate;
@@ -82,8 +83,8 @@ public class RecycleNewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             case TYPE_NEWS: {
                 NewsModel curNews = (NewsModel) this.dataset.get(position);
                 NewsViewHolder viewHolder = (NewsViewHolder) holder;
-                viewHolder.getNewsTitle().setText(Html.fromHtml(curNews.title));
-                viewHolder.getNewsDesc().setText(Html.fromHtml(curNews.desc));
+                viewHolder.getNewsTitle().setText(HtmlCompat.fromHtml(curNews.title, HtmlCompat.FROM_HTML_MODE_COMPACT));
+                viewHolder.getNewsDesc().setText(HtmlCompat.fromHtml(curNews.desc, HtmlCompat.FROM_HTML_MODE_COMPACT));
                 viewHolder.getNewsDate().setText(formatDate(curNews.date));
                 break;
             }

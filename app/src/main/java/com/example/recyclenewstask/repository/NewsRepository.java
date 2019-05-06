@@ -38,32 +38,11 @@ public class NewsRepository {
 
     private NewsRepository(){}
 
-    public static NewsRepository getInstance(Context context){
+    public static NewsRepository getInstance(){
         if(INSTANCE == null){
             synchronized (NewsRepository.class){
                 if(INSTANCE == null){
                     INSTANCE = new NewsRepository();
-                    NewsDatabase database = Room.databaseBuilder(
-                            context,
-                            NewsDatabase.class,
-                            "news.db").build();
-
-                    INSTANCE.setNewsDAO(database.newsDAO());
-                    INSTANCE.setChosenNewsDAO(database.chosenNewsDAO());
-
-                    INSTANCE.deleteAllFromTables()
-                            //.andThen(INSTANCE.insertNews(NewsMapper.mapNewsModelListToEntity(NewsUtils.generateNews(30))))
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(new DisposableCompletableObserver() {
-                                @Override
-                                public void onComplete() { }
-
-                                @Override
-                                public void onError(Throwable e) {
-                                    Log.e(NewsInformationActivity.class.getName(), e.getMessage());
-                                }
-                            });
                 }
             }
         }
@@ -71,7 +50,30 @@ public class NewsRepository {
         return INSTANCE;
     }
 
-    public Maybe<List<News>> getAllNews() {
+    public void initDB(Context context){
+        NewsDatabase database = Room.databaseBuilder(
+                context,
+                NewsDatabase.class,
+                "news.db").build();
+
+        INSTANCE.setNewsDAO(database.newsDAO());
+        INSTANCE.setChosenNewsDAO(database.chosenNewsDAO());
+
+        INSTANCE.deleteAllFromTables()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() { }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(NewsInformationActivity.class.getName(), e.getMessage());
+                    }
+                });
+    }
+
+    public Single<List<News>> getAllNews() {
         return newsDAO.getAll();
     }
 

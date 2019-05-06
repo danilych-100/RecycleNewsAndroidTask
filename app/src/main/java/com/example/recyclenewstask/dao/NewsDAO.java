@@ -33,7 +33,7 @@ public interface NewsDAO {
     @Query("SELECT COUNT(id) FROM news")
     Single<Integer> getRowsCount();
 
-    @Query("SELECT * FROM news ORDER BY date DESC LIMIT :limitCount")
+    @Query("SELECT * FROM news ORDER BY date ASC LIMIT :limitCount")
     Maybe<List<News>> getLastRowsByLimitAndOrderByDate(int limitCount);
 
     @Nullable
@@ -41,7 +41,7 @@ public interface NewsDAO {
     Single<News> getNewsById(int idToSelect);
 
     @Query("SELECT * FROM news")
-    Maybe<List<News>> getAll();
+    Single<List<News>> getAll();
 
     @Query("SELECT * FROM news WHERE id in (:ids)")
     Maybe<List<News>> getAllNewsByIds(List<Integer> ids);

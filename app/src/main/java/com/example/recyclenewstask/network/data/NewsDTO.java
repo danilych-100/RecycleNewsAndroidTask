@@ -28,17 +28,9 @@ public class NewsDTO implements Serializable {
         public String getContent() {
             return content;
         }
-
-        public void setContent(String content) {
-            this.content = content;
-        }
     }
 
     public Payload getPayload() {
         return payload;
-    }
-
-    public void setPayload(Payload payload) {
-        this.payload = payload;
     }
 }

@@ -27,14 +27,6 @@ public class NewsTitleDTO implements Serializable {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getTitle() {
         return title;
     }
@@ -47,20 +39,12 @@ public class NewsTitleDTO implements Serializable {
         return publicationDate;
     }
 
-    public void setPublicationDate(PDate publicationDate) {
-        this.publicationDate = publicationDate;
-    }
-
     public class PDate{
         @SerializedName("milliseconds")
         private long milliseconds;
 
         public long getMilliseconds() {
             return milliseconds;
-        }
-
-        public void setMilliseconds(long milliseconds) {
-            this.milliseconds = milliseconds;
         }
     }
 }
